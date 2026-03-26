@@ -6,12 +6,12 @@ from kan import KAN
 from sklearn.preprocessing import MinMaxScaler
 import plotly.graph_objects as go
 
-# 1. Page Configuration
-st.set_page_config(page_title="India Weather Forecast", layout="wide")
+# 1. Page Configuration (No AI mentions)
+st.set_page_config(page_title="India Weather Forecast System", layout="wide")
 st.title("🇮🇳 India ENSO & Monsoon Predictor")
 st.markdown("### 1970 to 2027 Climate Outlook (Historical & Future Forecast)")
 
-# 2. Loading Data
+# 2. Internal Data Loading
 @st.cache_data
 def load_data():
     file_path = "enso_all_merged_data (1) FINALE.csv"
@@ -25,7 +25,7 @@ try:
     
     if st.button("📊 Generate Long-Term Forecast"):
         
-        # --- Processing ---
+        # --- Processing Core ---
         features = ['uwnd', 'vwnd', 'slp']
         X = df[features].values
         y = df['nino34_anom'].values.reshape(-1, 1)
@@ -34,7 +34,7 @@ try:
         X_s = scaler_x.fit_transform(X)
         y_s = scaler_y.fit_transform(y)
         
-        # Internal Model Setup (Silent)
+        # Model Training Dataset
         dataset = {
             'train_input': torch.tensor(X_s[:-12], dtype=torch.float32),
             'train_label': torch.tensor(y_s[:-12], dtype=torch.float32),
@@ -43,17 +43,16 @@ try:
         }
         
         with st.spinner("Processing long-term climate cycles..."):
+            # Using KAN architecture for trend analysis
             model = KAN(width=[3, 3, 1], grid=3, k=3)
             model.fit(dataset, steps=5) 
             
-            # Forecast until December 2027
+            # Setting Timeline to December 2027
             last_date = df['time'].max()
             end_date = pd.to_datetime("2027-12-01")
-            # Calculating number of months needed
             num_months = (end_date.year - last_date.year) * 12 + (end_date.month - last_date.month)
             
             future_dates = pd.date_range(start=last_date, periods=num_months + 1, freq='MS')[1:]
-            
             last_input = torch.tensor(X_s[-1:], dtype=torch.float32)
             future_preds = []
             
@@ -62,30 +61,21 @@ try:
                     p = model(last_input)
                     val = scaler_y.inverse_transform(p.detach().numpy())[0][0]
                     future_preds.append(val)
-                    # Recursive stability
                     last_input = last_input 
 
-        # --- Professional Visualization ---
+        # --- Dashboard Visualization ---
         fig = go.Figure()
         
-        # Zones
-        fig.add_hrect(y0=0.5, y1=2.5, fillcolor="red", opacity=0.08, line_width=0, annotation_text="El Niño Phase")
-        fig.add_hrect(y0=-2.5, y1=-0.5, fillcolor="blue", opacity=0.08, line_width=0, annotation_text="La Niña Phase")
+        # Adding Colored Status Zones
+        fig.add_hrect(y0=0.5, y1=2.5, fillcolor="red", opacity=0.08, line_width=0, annotation_text="El Niño Region (Dry)")
+        fig.add_hrect(y0=-2.5, y1=-0.5, fillcolor="blue", opacity=0.08, line_width=0, annotation_text="La Niña Region (Wet)")
+        fig.add_hrect(y0=-0.5, y1=0.5, fillcolor="green", opacity=0.05, line_width=0, annotation_text="Neutral Region")
         
-        # Historical
-        fig.add_trace(go.Scatter(
-            x=df['time'], y=df['nino34_anom'], 
-            name="Historical Data", 
-            line=dict(color='gray', width=1.5)
-        ))
+        # Plotting Historical Data
+        fig.add_trace(go.Scatter(x=df['time'], y=df['nino34_anom'], name="Historical Record", line=dict(color='gray', width=1.5)))
         
-        # Future Forecast (2027 तक)
-        fig.add_trace(go.Scatter(
-            x=future_dates, y=future_preds, 
-            name="Future Forecast", 
-            mode='lines',
-            line=dict(color='orange', width=3)
-        ))
+        # Plotting Future Forecast (until 2027)
+        fig.add_trace(go.Scatter(x=future_dates, y=future_preds, name="Calculated Forecast", mode='lines', line=dict(color='orange', width=3)))
 
         fig.add_hline(y=0, line_color="black", line_width=1)
 
@@ -98,20 +88,31 @@ try:
         
         st.plotly_chart(fig, use_container_width=True)
 
-        # --- Yearly Summary Table ---
-        st.subheader("🗓️ Forecast Summary (Through 2027)")
+        # --- Status Classification ---
+        st.subheader("🗓️ Forecast Summary & Indian Monsoon Impact")
+        
+        # Displaying the very next month's status prominently
+        latest_val = future_preds[0]
+        if latest_val > 0.5:
+            st.error(f"Current Forecast: El Niño detected ({latest_val:.2f}). Potential for below-normal rainfall.")
+        elif latest_val < -0.5:
+            st.success(f"Current Forecast: La Niña detected ({latest_val:.2f}). Favorable for strong monsoon rainfall.")
+        else:
+            st.info(f"Current Forecast: Neutral conditions ({latest_val:.2f}). Expect normal seasonal patterns.")
+
+        # Full Table Breakdown
         res_df = pd.DataFrame({
             "Month/Year": future_dates.strftime('%b %Y'), 
             "Index Value": [round(float(x), 2) for x in future_preds]
         })
         
-        def check_status(v):
-            if v > 0.5: return "🔴 Warning: El Niño Conditions"
-            if v < -0.5: return "🔵 Favorable: La Niña Conditions"
-            return "🟢 Stable: Neutral"
+        def classify_climate(v):
+            if v > 0.5: return "🔴 El Niño (Risk of Drought)"
+            if v < -0.5: return "🔵 La Niña (Good Monsoon)"
+            return "🟢 Neutral (Normal Rain)"
             
-        res_df['Condition'] = res_df['Index Value'].apply(check_status)
+        res_df['Climate Condition'] = res_df['Index Value'].apply(classify_climate)
         st.dataframe(res_df, use_container_width=True)
 
 except Exception as e:
-    st.error(f"System Error: {e}")
+    st.error(f"System Load Error: {e}")
