@@ -129,3 +129,20 @@ try:
 
 except Exception as e:
     st.error(f"Error loading prediction: {e}")
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Sidebar ya Main page par Heatmap ka option
+if st.checkbox("Show Correlation Heatmap"):
+    st.subheader("Feature Correlation Analysis")
+    fig_corr, ax_corr = plt.subplots()
+    # Sirf numerical columns ka correlation
+    sns.heatmap(df.corr(), annot=True, cmap='coolwarm', ax=ax_corr)
+    st.pyplot(fig_corr)
+
+# Sunspot Accuracy Graph
+if st.checkbox("Show Sunspot Analysis"):
+    st.subheader("Sunspot Activity vs Nino 3.4")
+    # Plotting sunspot data from your CSV
+    st.line_chart(df.set_index('time')['sunspot'])
