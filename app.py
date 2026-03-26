@@ -4,93 +4,82 @@ import numpy as np
 import torch
 from kan import KAN
 from sklearn.preprocessing import MinMaxScaler
+import plotly.graph_objects as go
 
-st.set_page_config(page_title="India Weather AI", layout="wide")
-st.title("🇮🇳 India ENSO & Monsoon Predictor")
-st.markdown("Physics-Informed AI for Climate Forecasting")
+st.set_page_config(page_title="India Weather AI 1970-Future", layout="wide")
 
-uploaded_file = st.sidebar.file_uploader("Upload your CSV file", type=['csv'])
+# Title
+st.title("🇮🇳 India ENSO & Monsoon Predictor (1970 - Future)")
 
-def run_prediction(df):
-    # 1. Clean Column Names
+# Function to load data directly from GitHub/Folder
+@st.cache_data
+def load_internal_data():
+    # File ka naam wahi rakhein jo GitHub par hai
+    file_path = "enso_all_merged_data (1) FINALE.csv" 
+    df = pd.read_csv(file_path)
     df.columns = df.columns.str.strip().str.lower()
-    
-    # 2. Identify Required Columns
-    features = ['uwnd', 'vwnd', 'slp'] # Core Walker Circulation features
-    target = 'nino34_anom'
-    
-    if target not in df.columns:
-        st.error(f"Error: '{target}' column not found in your file!")
-        return None, None
+    df['time'] = pd.to_datetime(df['time'])
+    # Filter for data from 1970 onwards
+    df = df[df['time'].dt.year >= 1970]
+    return df
 
-    # Filter available features
-    found_features = [f for f in features if f in df.columns]
-    if not found_features:
-        st.error("Error: No valid features (uwnd, slp, etc.) found in file!")
-        return None, None
-
-    # 3. Data Preparation
-    X = df[found_features].values
-    y = df[target].values.reshape(-1, 1)
+try:
+    df = load_internal_data()
+    st.success(f"Loaded Data from {df['time'].dt.year.min()} to {df['time'].dt.year.max()}")
     
-    scaler_x, scaler_y = MinMaxScaler(), MinMaxScaler()
-    X_s = scaler_x.fit_transform(X)
-    y_s = scaler_y.fit_transform(y)
-    
-    # 4. Train/Test Split (Important for KAN)
-    split = int(len(X_s) * 0.8)
-    train_input = torch.tensor(X_s[:split], dtype=torch.float32)
-    train_label = torch.tensor(y_s[:split], dtype=torch.float32)
-    test_input = torch.tensor(X_s[split:], dtype=torch.float32)
-    test_label = torch.tensor(y_s[split:], dtype=torch.float32)
-    
-    dataset = {
-        'train_input': train_input,
-        'train_label': train_label,
-        'test_input': test_input,
-        'test_label': test_label
-    }
-    
-    # 5. KAN Model Configuration
-    # Input size depends on number of features found
-    model = KAN(width=[len(found_features), 2, 1], grid=3, k=3)
-    
-    with st.spinner('AI is analyzing Ocean-Atmosphere coupling...'):
-        model.fit(dataset, steps=5) # Reduced steps for faster web response
-    
-    # 6. Future Prediction (Next 6 Months)
-    last_input = torch.tensor(X_s[-1:], dtype=torch.float32)
-    preds = []
-    for i in range(6):
-        p = model(last_input)
-        val = scaler_y.inverse_transform(p.detach().numpy())[0][0]
-        preds.append(val)
+    if st.button("🚀 Run AI Prediction"):
+        # Data Prep
+        features = ['uwnd', 'vwnd', 'slp']
+        X = df[features].values
+        y = df['nino34_anom'].values.reshape(-1, 1)
         
-    return df, preds
-
-if uploaded_file:
-    data = pd.read_csv(uploaded_file)
-    df, predictions = run_prediction(data)
-    
-    if predictions:
-        st.success("Analysis Complete!")
+        scaler_x, scaler_y = MinMaxScaler(), MinMaxScaler()
+        X_s = scaler_x.fit_transform(X)
+        y_s = scaler_y.fit_transform(y)
         
-        col1, col2 = st.columns(2)
-        with col1:
-            st.subheader("6-Month Forecast Graph")
-            forecast_df = pd.DataFrame({
-                "Month": [f"Month +{i+1}" for i in range(6)],
-                "Anomaly": predictions
-            })
-            st.line_chart(forecast_df.set_index('Month'))
+        # Split for KAN
+        split = int(len(X_s) * 0.8)
+        dataset = {
+            'train_input': torch.tensor(X_s[:split], dtype=torch.float32),
+            'train_label': torch.tensor(y_s[:split], dtype=torch.float32),
+            'test_input': torch.tensor(X_s[split:], dtype=torch.float32),
+            'test_label': torch.tensor(y_s[split:], dtype=torch.float32)
+        }
         
-        with col2:
-            st.subheader("India Impact Table")
-            for i, val in enumerate(predictions):
-                # ENSO Logic
-                if val > 0.5: status = "🔴 El Niño (Risk of Drought)"
-                elif val < -0.5: status = "🔵 La Niña (Good Monsoon)"
-                else: status = "🟢 Neutral (Normal Rain)"
-                st.write(f"**Month {i+1}:** {val:.2f} — {status}")
+        # KAN Model
+        model = KAN(width=[3, 2, 1], grid=3, k=3)
+        with st.spinner("AI is analyzing decades of climate patterns..."):
+            model.fit(dataset, steps=5)
+            
+            # Future Forecast (Next 12 Months)
+            last_input = torch.tensor(X_s[-1:], dtype=torch.float32)
+            future_dates = pd.date_range(start=df['time'].max(), periods=13, freq='M')[1:]
+            future_preds = []
+            for _ in range(12):
+                p = model(last_input)
+                val = scaler_y.inverse_transform(p.detach().numpy())[0][0]
+                future_preds.append(val)
+        
+        # --- Visualization with Plotly ---
+        fig = go.Figure()
+        
+        # Historical Data
+        fig.add_trace(go.Scatter(x=df['time'], y=df['nino34_anom'], name="Historical Data", line=dict(color='gray')))
+        
+        # Future Forecast
+        fig.add_trace(go.Scatter(x=future_dates, y=future_preds, name="AI Future Forecast", line=dict(color='red', width=4)))
+        
+        # Threshold Lines
+        fig.add_hline(y=0.5, line_dash="dash", line_color="orange", annotation_text="El Niño Threshold")
+        fig.add_hline(y=-0.5, line_dash="dash", line_color="blue", annotation_text="La Niña Threshold")
+        
+        fig.update_layout(title="ENSO Trend: 1970 to Future", xaxis_title="Year", yaxis_title="Nino 3.4 Anomaly")
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Result Table
+        st.subheader("Future 12-Month Outlook")
+        res_df = pd.DataFrame({"Month": future_dates.strftime('%B %Y'), "Predicted Anomaly": future_preds})
+        st.dataframe(res_df.style.highlight_max(axis=0))
 
-st.info("💡 **Science Note:** This model tracks the **Walker Circulation**. Changes in Sea Level Pressure (SLP) and Wind (UWND) indicate shifts in India's monsoon intensity.")
+except Exception as e:
+    st.error(f"Error loading file: Ensure the CSV is in your GitHub folder. Error: {e}")
