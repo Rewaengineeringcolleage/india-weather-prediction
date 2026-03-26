@@ -5,6 +5,5 @@ torch
 pykan
 scikit-learn
 matplotlib
-PyYAML
-tqdm
+seaborn
 plotly
