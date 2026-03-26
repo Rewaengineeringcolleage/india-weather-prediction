@@ -5,3 +5,4 @@ torch
 pykan
 scikit-learn
 matplotlib
+PyYAML
