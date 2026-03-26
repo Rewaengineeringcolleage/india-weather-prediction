@@ -7,7 +7,7 @@ from sklearn.preprocessing import MinMaxScaler
 import plotly.graph_objects as go
 
 # 1. Page Configuration
-st.set_page_config(page_title="Climate Prediction System", layout="wide")
+st.set_page_config(page_title="Climate Forecast 2030", layout="wide")
 st.title("🇮🇳 India ENSO & Monsoon Predictor")
 st.markdown("### 1970 to 2030 Climate Outlook (Historical & Future Forecast)")
 
@@ -18,15 +18,14 @@ def load_data():
     df = pd.read_csv(file_path)
     df.columns = df.columns.str.strip().str.lower()
     df['time'] = pd.to_datetime(df['time'])
-    # Filtering from 1970 as requested
     return df[df['time'].dt.year >= 1970]
 
 try:
     df = load_data()
     
-    if st.button("📊 Generate Long-Term Forecast (1970-2030)"):
+    if st.button("📊 Generate 2030 Long-Term Forecast"):
         
-        # --- Processing Core ---
+        # --- Data Processing ---
         features = ['uwnd', 'vwnd', 'slp']
         X = df[features].values
         y = df['nino34_anom'].values.reshape(-1, 1)
@@ -42,11 +41,11 @@ try:
             'test_label': torch.tensor(y_s[-12:], dtype=torch.float32)
         }
         
-        with st.spinner("Analyzing multi-decadal climate cycles until 2030..."):
+        with st.spinner("Processing climate cycles until 2030..."):
             model = KAN(width=[3, 3, 1], grid=3, k=3)
             model.fit(dataset, steps=5) 
             
-            # Forecast Range: Current to December 2030
+            # Setting Timeline to December 2030
             last_date = df['time'].max()
             end_date = pd.to_datetime("2030-12-01")
             num_months = (end_date.year - last_date.year) * 12 + (end_date.month - last_date.month)
@@ -55,6 +54,7 @@ try:
             last_input = torch.tensor(X_s[-1:], dtype=torch.float32)
             future_preds = []
             
+            # Generating forecast
             for _ in range(len(future_dates)):
                 with torch.no_grad():
                     p = model(last_input)
@@ -62,66 +62,72 @@ try:
                     future_preds.append(val)
                     last_input = last_input 
 
-        # --- Clean & Professional Visualization ---
+        # --- Clean Visual Dashboard ---
         fig = go.Figure()
         
-        # Clear Background Color Zones
-        fig.add_hrect(y0=0.5, y1=2.5, fillcolor="red", opacity=0.07, line_width=0, annotation_text="El Niño (Dry/Warm)")
-        fig.add_hrect(y0=-2.5, y1=-0.5, fillcolor="blue", opacity=0.07, line_width=0, annotation_text="La Niña (Wet/Cool)")
-        fig.add_hrect(y0=-0.5, y1=0.5, fillcolor="green", opacity=0.04, line_width=0, annotation_text="Normal/Neutral")
+        # Color Zones for Conditions
+        fig.add_hrect(y0=0.5, y1=2.5, fillcolor="red", opacity=0.1, line_width=0, annotation_text="El Niño (Drought Risk)")
+        fig.add_hrect(y0=-2.5, y1=-0.5, fillcolor="blue", opacity=0.1, line_width=0, annotation_text="La Niña (High Rainfall)")
+        fig.add_hrect(y0=-0.5, y1=0.5, fillcolor="green", opacity=0.05, line_width=0, annotation_text="Neutral (Normal)")
         
-        # Historical Record
-        fig.add_trace(go.Scatter(
-            x=df['time'], y=df['nino34_anom'], 
-            name="Historical Data", 
-            line=dict(color='rgba(100,100,100,0.6)', width=1.5),
-            hoverinfo="x+y"
-        ))
+        # Historical Trace
+        fig.add_trace(go.Scatter(x=df['time'], y=df['nino34_anom'], name="Past Record", line=dict(color='gray', width=1.5)))
         
-        # Future Forecast (2030 तक)
-        fig.add_trace(go.Scatter(
-            x=future_dates, y=future_preds, 
-            name="Future Forecast", 
-            mode='lines',
-            line=dict(color='orange', width=3.5),
-            hoverinfo="x+y"
-        ))
+        # 2030 Forecast Trace
+        fig.add_trace(go.Scatter(x=future_dates, y=future_preds, name="Future Forecast (to 2030)", line=dict(color='orange', width=3)))
 
         fig.add_hline(y=0, line_color="black", line_width=1)
 
+        # X-Axis setup for 2-year intervals
         fig.update_layout(
-            height=650,
+            height=600,
             hovermode="x unified",
             xaxis=dict(
-                title="Yearly Timeline",
-                rangeslider=dict(visible=True), # Zoom into specific years
-                type="date",
-                tickformat="%Y"
+                title="Year",
+                tickformat="%Y",
+                dtick="M24", # 24 months = 2 years interval
+                rangeslider=dict(visible=True)
             ),
             yaxis=dict(title="Oceanic Anomaly Index", range=[-2.5, 2.5]),
-            template="plotly_white"
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
         
         st.plotly_chart(fig, use_container_width=True)
 
-        # --- Summary Section ---
-        st.subheader("🗓️ Long-Term Outlook Summary")
+        # --- Status Cards ---
+        st.subheader("📋 2030 Forecast Insights")
         
-        # Monthly Classification Logic
+        # Show specific predictions for next 5 years (Summary)
+        years_to_show = [2025, 2026, 2027, 2028, 2029, 2030]
+        cols = st.columns(len(years_to_show))
+        
+        temp_df = pd.DataFrame({"Date": future_dates, "Val": future_preds})
+        for i, year in enumerate(years_to_show):
+            yearly_avg = temp_df[temp_df['Date'].dt.year == year]['Val'].mean()
+            if pd.isna(yearly_avg): continue
+            
+            with cols[i]:
+                if yearly_avg > 0.5:
+                    st.metric(f"Year {year}", f"{yearly_avg:.2f}", "El Niño")
+                elif yearly_avg < -0.5:
+                    st.metric(f"Year {year}", f"{yearly_avg:.2f}", "-La Niña", delta_color="normal")
+                else:
+                    st.metric(f"Year {year}", f"{yearly_avg:.2f}", "Neutral", delta_color="off")
+
+        # Detailed Table
+        st.subheader("🗓️ Monthly Breakdown (2025 - 2030)")
         res_df = pd.DataFrame({
-            "Month/Year": future_dates.strftime('%B %Y'), 
-            "Index": [round(float(x), 2) for x in future_preds]
+            "Month/Year": future_dates.strftime('%b %Y'), 
+            "Index Value": [round(float(x), 2) for x in future_preds]
         })
         
         def classify(v):
-            if v > 0.5: return "🔴 El Niño Conditions"
-            if v < -0.5: return "🔵 La Niña Conditions"
-            return "🟢 Normal/Neutral"
+            if v > 0.5: return "🔴 El Niño (Dry)"
+            if v < -0.5: return "🔵 La Niña (Wet)"
+            return "🟢 Neutral (Normal)"
             
-        res_df['Climate Status'] = res_df['Index'].apply(classify)
-        
-        # Searchable Table
+        res_df['Condition'] = res_df['Index Value'].apply(classify)
         st.dataframe(res_df, use_container_width=True)
 
 except Exception as e:
-    st.error(f"Error loading system: {e}")
+    st.error(f"System Load Error: {e}")
