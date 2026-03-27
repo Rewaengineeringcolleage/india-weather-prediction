@@ -1,11 +1,8 @@
 streamlit
 pandas
-numpy
 torch
 pykan
+requests
 scikit-learn
 matplotlib
-seaborn
-plotly
-PyYAML
-tqdm
+numpy
