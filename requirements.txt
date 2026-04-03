@@ -1,9 +1,3 @@
 streamlit
 pandas
-numpy
-matplotlib
-seaborn
-requests
-torch
-pykan
-scikit-learn
+plotly
