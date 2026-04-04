@@ -37,27 +37,28 @@ st.markdown("""
 def load_data():
     try:
         df = pd.read_csv('Final_Model_Input_2026.csv')
+        # Clean column names
+        df.columns = df.columns.str.strip()
         return df
-    except:
-        st.error("CSV File not found. Please upload 'Final_Model_Input_2026.csv' to GitHub.")
+    except Exception as e:
+        st.error(f"Error loading CSV: {e}")
         return None
 
 df = load_data()
 
 # --- SIDEBAR: KAN INTELLIGENCE ---
 with st.sidebar:
-    st.title("🧠 KAN Model Inquiry")
+    st.title("🧠 KAN Model Intelligence")
     st.markdown("---")
     with st.expander("🔬 Model Overview"):
-        st.write("Kolmogorov-Arnold Networks use learnable splines on edges to capture 2026 atmospheric turbulence.")
+        st.write("Kolmogorov-Arnold Networks use learnable splines on edges to capture non-linear atmospheric turbulence for the 2026 forecast.")
     with st.expander("📊 Accuracy (R2 Score)"):
         st.write("- **KAN Model:** 0.85")
         st.write("- **SVM:** 0.02")
         st.write("- **Linear Reg:** 0.09")
-    with st.expander("🔥 Training Heatmap"):
-        heat = np.random.rand(10, 10)
-        fig_h = px.imshow(heat, color_continuous_scale='Viridis')
-        st.plotly_chart(fig_h, use_container_width=True)
+    with st.expander("📂 Dataset Info"):
+        st.write("Source: NOAA NCEP Ensemble GFS")
+        st.write("Parameters: SST, u-wind, v-wind, SLP")
 
 # --- HEADER ---
 st.markdown("# 🛰️ Indian El Niño and La Niña Climate Predictor")
@@ -71,44 +72,62 @@ if st.button('EXECUTE GLOBAL CLIMATE ANALYSIS'):
         st.header("📌 2026 Forecast Summary")
         c1, c2, c3 = st.columns(3)
         with c1:
-            st.metric("Peak Predicted SST", "2.95 °C", "Extreme Anomaly")
+            st.metric("Predicted SST Anomaly", "2.95 °C", "Extreme Alert")
         with c2:
-            st.error("PHASE: SUPER EL NIÑO DETECTED")
+            st.error("PHASE: SUPER EL NIÑO")
         with c3:
-            st.metric("Ensemble Members", "162", "Robust")
+            st.metric("Ensemble Members", "162", "High Confidence")
 
-        # 2. ENSO Mechanics Images
+        # 2. ENSO Mechanics (Text-Based)
         st.divider()
-        st.subheader("📖 Understanding ENSO Mechanics")
-        
-        i1, i2 = st.columns(2)
-        with i1:
-            st.markdown("#### **El Niño (Warm Phase)**")
-            st.image("https://climate.ncsu.edu/wp-content/uploads/2021/02/elnino_diagram.png", caption="Ocean Surface Warming")
-        with i2:
-            st.markdown("#### **La Niña (Cold Phase)**")
-            st.image("https://climate.ncsu.edu/wp-content/uploads/2021/02/lanina_diagram.png", caption="Ocean Surface Cooling")
+        st.subheader("📖 Ocean-Atmosphere Interaction Mechanics")
+        m1, m2 = st.columns(2)
+        with m1:
+            st.markdown("### **El Niño (Warm Phase)**")
+            st.write("""
+            **Process:** Weakening of trade winds reduces the upwelling of cold water. 
+            Warm surface water accumulates in the eastern tropical Pacific.
+            **Impact:** Major disruption to global weather, leading to droughts in India.
+            """)
+        with m2:
+            st.markdown("### **La Niña (Cold Phase)**")
+            st.write("""
+            **Process:** Strengthened trade winds push warm water toward Asia, 
+            causing intense upwelling of cold water along the South American coast.
+            **Impact:** Increased rainfall and potential flooding in Southeast Asia and India.
+            """)
 
-        # 3. Graph & Table
+        # 3. Graph Processing (Fixing the ValueError)
         st.divider()
         st.subheader("📊 70-Year Global ENSO Chronology & Forecast")
-        fig = px.area(df, x='Year', y='SST_Anomaly', color='Phase',
-                      color_discrete_map={'El Niño': '#ff4b4b', 'La Niña': '#00d4ff', 'Neutral': '#9ca3af'},
-                      markers=True)
+        
+        # Grouping by Year to prevent Plotly overlap error
+        chart_df = df.groupby('Year').agg({'SST_Anomaly': 'mean', 'Phase': 'first'}).reset_index()
+        
+        fig = px.line(chart_df, x='Year', y='SST_Anomaly', 
+                     title="ENSO SST Anomaly Trend (1960 - 2030)",
+                     markers=True,
+                     color_discrete_sequence=["#00d4ff"])
+        
+        # Add coloring for zones
+        fig.add_hrect(y0=0.5, y1=3.5, fillcolor="red", opacity=0.1, annotation_text="El Niño Zone")
+        fig.add_hrect(y0=-0.5, y1=-3.5, fillcolor="blue", opacity=0.1, annotation_text="La Niña Zone")
+        
         fig.update_layout(template="plotly_dark", height=500, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig, use_container_width=True)
 
-        st.subheader("📋 Comprehensive Data Report")
+        # 4. Detailed Report
+        st.subheader("📋 Comprehensive Ensemble Report")
         st.dataframe(df, use_container_width=True)
 
-        # 4. Impact Analysis
+        # 5. Impact Analysis
         st.divider()
-        st.subheader("🚨 2026 Critical Risk Assessment")
+        st.subheader("🚨 2026 Socio-Economic Risk Assessment")
         l, r = st.columns(2)
         with l:
-            st.info("### 🌾 Agricultural Risks\n- **Monsoon Deficit:** 18% less rainfall.\n- **Crop Impact:** Risk to Soybean in Rewa/MP.")
+            st.info("### 🌾 Agricultural Risks\n- **Monsoon Deficit:** Projected 18% rainfall shortage.\n- **Crop Impact:** Critical risk for Soybeans in Rewa/MP region.")
         with r:
-            st.warning("### 🌡️ Thermal Hazards\n- **Heatwaves:** 45°C+ days in North India.\n- **Power Crisis:** High demand due to El Niño heat.")
+            st.warning("### 🌡️ Thermal Hazards\n- **Heatwaves:** Extended frequency of 45°C+ days.\n- **Power Crisis:** High cooling demand leading to grid instability.")
     
 else:
     st.info("Please click the 'EXECUTE' button to generate the complete forecast report.")
