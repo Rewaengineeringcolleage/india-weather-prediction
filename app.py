@@ -33,8 +33,7 @@ st.markdown("""
         padding: 15px 25px;
         border-radius: 10px;
         margin-top: 50px; 
-        margin-bottom: 30px; 
-    }
+        margin-bottom: 30px;     }
     /* Sub Header Styling */
     .sub-head { 
         font-size: 32px; 
@@ -58,8 +57,7 @@ st.markdown("""
         border-radius: 25px;
         border: 6px solid #FFFFFF;
         box-shadow: 0px 12px 30px rgba(0,0,0,0.3);
-        transition: 0.4s ease;
-        text-transform: uppercase;
+        transition: 0.4s ease;   text-transform: uppercase;
     }
     .stButton>button:hover {
         background: #E74C3C;
@@ -84,7 +82,7 @@ if predict_clicked:
     
     # Event Classification Logic
     la_nina_years = [1964, 1970, 1973, 1975, 1988, 1999, 2010, 2021, 2025]
-    el_nino_years = [1965, 1972, 1982, 1997, 2015, 2023, 2026, 2027] # Super El Nino 2026
+    el_nino_years = [1965, 1972, 1982, 1997, 2015, 2023, 2026, 2027] 
     
     events = np.zeros(len(years))
     conditions = []
@@ -122,7 +120,6 @@ if predict_clicked:
     with col_t2:
         st.markdown('<p class="sub-head">Monthly 2026 Forecast: Super El Niño Peak</p>', unsafe_allow_html=True)
         months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-        # Critical 2026 Peak Modeling (Surface Temp Anomaly)
         monthly_oni = [-0.1, 0.2, 0.6, 1.3, 1.9, 2.5, 2.8, 3.1, 3.3, 3.4, 3.2, 2.9] 
         
         monthly_status = []
@@ -140,7 +137,7 @@ if predict_clicked:
     with inf1:
         st.error("""
         ### Meteorological Warning
-        Recent findings from the **Severe Weather Center** indicate that 2026 will transition into a 
+        Recent findings indicate that 2026 will transition into a 
         **'Super El Niño'** state. Ocean temperature anomalies are expected to hit **+3.4°C**, 
         the highest in recorded history for the modern era.
         """)
@@ -152,7 +149,7 @@ if predict_clicked:
         - **Economic Impact:** High risk to food security and water reserves.
         """)
 
-# 4. KAN SPECIFICATIONS SECTION (AT BOTTOM)
+# 4. KAN SPECIFICATIONS SECTION (REFINED)
 st.divider()
 st.markdown('<p class="section-head">TECHNICAL SPECIFICATIONS: KAN ARCHITECTURE</p>', unsafe_allow_html=True)
 
@@ -169,7 +166,6 @@ with col_kan_left:
     
     st.markdown('<p class="sub-head">Feature Correlation Heatmap</p>', unsafe_allow_html=True)
     fig_hm, ax_hm = plt.subplots(figsize=(10, 5))
-    # Domain-specific correlations for Sunspots/Winds/SLP
     corr_matrix = np.array([
         [1.00, 0.12, 0.05, -0.45, 0.32],
         [0.12, 1.00, 0.85, 0.22, 0.54],
@@ -182,35 +178,22 @@ with col_kan_left:
     st.pyplot(fig_hm)
 
 with col_kan_right:
-    st.markdown('<p class="sub-head">KAN Structural Edge-Mapping</p>', unsafe_allow_html=True)
-    st.markdown("Mathematical representation of nodes and spline-based edges (5-3-1 Topology):")
+    # Math and Topology Plot Removed as requested
+    st.markdown('<p class="sub-head">Model Intelligence Summary</p>', unsafe_allow_html=True)
+    st.info("""
+    The system utilizes a **Kolmogorov-Arnold Network (KAN)** to process complex atmospheric variables. 
+    Unlike traditional models, KAN focuses on learning univariate functions on edges, making it 
+    highly effective for capturing non-linear climate shifts like El Niño.
+    """)
     
-    # LIVE GENERATED KAN ARCHITECTURE PLOT
-    fig_arch, ax_arch = plt.subplots(figsize=(7, 7))
-    nodes_per_layer = [5, 3, 1]
-    for i, num_nodes in enumerate(nodes_per_layer):
-        y_pos = np.linspace(0.1, 0.9, num_nodes)
-        x_pos = np.full(num_nodes, i * 0.5)
-        ax_arch.scatter(x_pos, y_pos, s=600, color='#1F618D', zorder=5)
-        
-        # Draw curved "Spline" connections
-        if i < len(nodes_per_layer) - 1:
-            next_num_nodes = nodes_per_layer[i+1]
-            next_y_pos = np.linspace(0.1, 0.9, next_num_nodes)
-            for y1 in y_pos:
-                for y2 in next_y_pos:
-                    # Drawing lines to represent edges where KAN learns functions
-                    ax_arch.plot([i*0.5, (i+1)*0.5], [y1, y2], color='#C0392B', alpha=0.3, linewidth=2)
-
-    ax_arch.set_axis_off()
-    st.pyplot(fig_arch)
-
     st.markdown("""
-    - **Basis Architecture:** Adaptive B-Splines on edges.
-    - **Grid Density:** 5 points with 3rd-order polynomials.
-    - **Optimized Via:** L-BFGS and Symbolic Regression.
-    - **Inputs:** 5 Core Atmospheric Variables.
+    **Key Computational Advantages:**
+    - **Adaptive Learning:** Uses B-Splines for high-precision curve fitting.
+    - **Reduced Overfitting:** Optimized via L-BFGS algorithms.
+    - **High Interpretability:** Better symbolic representation of climate data.
+    - **Input Variables:** Analysis of 5 core atmospheric indices.
     """)
 
 st.divider()
 st.caption("Advanced Climate Prediction Research | Developed for ENSO Cycle Modeling | Year: 2026")
+ 
