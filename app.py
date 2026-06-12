@@ -4,38 +4,66 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Page Configuration
+# Page Configuration for High Visibility
 st.set_page_config(page_title="INDIAN ENSO PREDICTOR", layout="wide")
 
-# Custom CSS for UI
+# Custom CSS for Massive UI and High-Contrast Elements
 st.markdown("""
     <style>
+    /* Main Title Styling */
     .main-title { 
-        font-size: 70px; font-weight: 900; color: #FFFFFF; 
+        font-size: 70px; 
+        font-weight: 900; 
+        color: #FFFFFF; 
         background: linear-gradient(90deg, #1A5276, #2980B9);
-        text-align: center; padding: 30px; border-radius: 20px;
-        margin-bottom: 40px; text-transform: uppercase;
-        box-shadow: 0px 10px 25px rgba(0,0,0,0.4); border: 5px solid #FFFFFF;
+        text-align: center; 
+        padding: 30px;
+        border-radius: 20px;
+        margin-bottom: 40px; 
+        text-transform: uppercase;
+        box-shadow: 0px 10px 25px rgba(0,0,0,0.4);
+        border: 5px solid #FFFFFF;
     }
+    /* Section Header Styling */
     .section-head { 
-        font-size: 42px; font-weight: bold; color: #FFFFFF; 
-        background-color: #1A5276; padding: 15px 25px;
-        border-radius: 10px; margin-top: 50px; margin-bottom: 30px; 
-    }
+        font-size: 42px; 
+        font-weight: bold; 
+        color: #FFFFFF; 
+        background-color: #1A5276;
+        padding: 15px 25px;
+        border-radius: 10px;
+        margin-top: 50px; 
+        margin-bottom: 30px;     }
+    /* Sub Header Styling */
     .sub-head { 
-        font-size: 32px; font-weight: bold; color: #1F618D; 
-        margin-bottom: 20px; border-bottom: 3px solid #1F618D;
+        font-size: 32px; 
+        font-weight: bold; 
+        color: #1F618D; 
+        margin-bottom: 20px; 
+        border-bottom: 3px solid #1F618D;
         display: inline-block;
     }
+    /* Global Font Scaling */
     p, li, .stMarkdown { font-size: 24px !important; line-height: 1.7; }
+    
+    /* Massive Highlighted Prediction Button */
     .stButton>button { 
-        font-size: 36px !important; font-weight: 900; height: 4.5em; 
-        width: 100%; background: #C0392B; color: white; 
-        border-radius: 25px; border: 6px solid #FFFFFF;
+        font-size: 36px !important; 
+        font-weight: 900;
+        height: 4.5em; 
+        width: 100%; 
+        background: #C0392B; 
+        color: white; 
+        border-radius: 25px;
+        border: 6px solid #FFFFFF;
         box-shadow: 0px 12px 30px rgba(0,0,0,0.3);
-        transition: 0.4s ease; text-transform: uppercase;
+        transition: 0.4s ease;   text-transform: uppercase;
     }
-    .stButton>button:hover { background: #E74C3C; transform: translateY(-5px); }
+    .stButton>button:hover {
+        background: #E74C3C;
+        transform: translateY(-5px);
+        box-shadow: 0px 15px 40px rgba(0,0,0,0.4);
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -119,15 +147,20 @@ if predict_clicked:
     with inf2:
         st.warning("### Indian Subcontinent Impact\n- **Drought Risk:** 65% in agri-zones.\n- **Heatwaves:** Frequency up by 40%.")
 
-# 4. TECHNICAL SPECIFICATIONS SECTION (MINIMAL)
+# 4. PROJECT VALIDATION & METRICS SECTION
 st.divider()
 st.markdown('<p class="section-head">PROJECT VALIDATION & METRICS</p>', unsafe_allow_html=True)
 col_kan_left, col_kan_right = st.columns([1.2, 1])
 
 with col_kan_left:
     st.markdown('<p class="sub-head">Comparative Accuracy Matrix</p>', unsafe_allow_html=True)
+    # Corrected names: KAN and CNN labels are now properly restored
     metrics_table = {
-        "Predictive Logic": ["Neural Architecture (Proposed)", "Baseline CNN", "Linear Regression"],
+        "Predictive Logic": [
+            "KAN: Kolmogorov-Arnold Network", 
+            "CNN: Convolutional Neural Network", 
+            "Linear Regression"
+        ],
         "R² Accuracy": ["0.948", "0.882", "0.765"],
         "MSE Loss": ["0.012", "0.045", "0.110"]
     }
@@ -140,7 +173,6 @@ with col_kan_left:
     st.pyplot(fig_hm)
 
 with col_kan_right:
-    # Intelligence Summary removed as requested
     st.markdown('<p class="sub-head">Project Conclusion</p>', unsafe_allow_html=True)
     st.success("""
     **Summary of Findings:**
