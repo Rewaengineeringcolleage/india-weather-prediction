@@ -33,7 +33,8 @@ st.markdown("""
         padding: 15px 25px;
         border-radius: 10px;
         margin-top: 50px; 
-        margin-bottom: 30px;     }
+        margin-bottom: 30px;     
+    }
     /* Sub Header Styling */
     .sub-head { 
         font-size: 32px; 
@@ -57,7 +58,8 @@ st.markdown("""
         border-radius: 25px;
         border: 6px solid #FFFFFF;
         box-shadow: 0px 12px 30px rgba(0,0,0,0.3);
-        transition: 0.4s ease;   text-transform: uppercase;
+        transition: 0.4s ease;   
+        text-transform: uppercase;
     }
     .stButton>button:hover {
         background: #E74C3C;
@@ -96,7 +98,7 @@ if predict_clicked:
             events[i] = 0
             conditions.append("Neutral")
 
-    fig_timeline, ax_timeline = plt.subplots(figsize=(22, 9), facecolor='none')
+    fig_timeline, ax_timeline = plt.subplots(figsize=(22, 9), facecolor='#FFFFFF')
     ax_timeline.set_facecolor('#F4F6F7')
 
     for i in range(len(years)):
@@ -154,7 +156,6 @@ col_kan_left, col_kan_right = st.columns([1.2, 1])
 
 with col_kan_left:
     st.markdown('<p class="sub-head">Comparative Accuracy Matrix</p>', unsafe_allow_html=True)
-    # Corrected names: KAN and CNN labels are now properly restored
     metrics_table = {
         "Predictive Logic": [
             "KAN: Kolmogorov-Arnold Network", 
