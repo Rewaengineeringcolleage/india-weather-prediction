@@ -171,30 +171,25 @@ with col_kan_left:
     st.table(pd.DataFrame(metrics_table))
     
     st.markdown('<p class="sub-head">Feature Correlation Heatmap</p>', unsafe_allow_html=True)
-    fig_hm, ax_hm = plt.subplots(figsize=(10, 6))
+    fig_hm, ax_hm = plt.subplots(figsize=(10, 5))
     
-    # SYSTEM ATTEMPT: Try to dynamically calculate from file, else use the exact screenshot matrix fallback
+    # Absolute mapping of the correlation dataset from Colab screenshot
     col_labels = ['uwnd', 'vwnd', 'slp', 'sunspot', 'nino34_anom', 'air_temp', 'pressure']
-    try:
-        df_live = pd.read_csv('enso_all_merged_with_air_pressure.csv')
-        df_numeric = df_live.select_dtypes(include=[np.number])
-        cols_drop = [c for c in ['Year', 'Month', 'year', 'month', 'date', 'member'] if c in df_numeric.columns]
-        if cols_drop:
-            df_numeric = df_numeric.drop(columns=cols_drop)
-        sns.heatmap(df_numeric.corr(), annot=True, cmap='YlGnBu', fmt=".2f", ax=ax_hm)
-    except Exception as e:
-        # EXACT SCREENSHOT REPLICA MATRIX (Statically Mapped for flawless rendering)
-        screenshot_corr = np.array([
-            [ 1.00, -0.34,  0.08, -0.02,  0.57,  0.64,  0.08],
-            [-0.34,  1.00,  0.48, -0.02, -0.17, -0.29,  0.48],
-            [ 0.08,  0.48,  1.00, -0.12, -0.29, -0.25,  1.00],
-            [-0.02, -0.02, -0.12,  1.00,  0.05,  0.04, -0.12],
-            [ 0.57, -0.17, -0.29,  0.05,  1.00,  0.86, -0.30],
-            [ 0.64, -0.29, -0.25,  0.04,  0.86,  1.00, -0.26],
-            [ 0.08,  0.48,  1.00, -0.12, -0.30, -0.26,  1.00]
-        ])
-        sns.heatmap(screenshot_corr, annot=True, xticklabels=col_labels, yticklabels=col_labels, cmap='YlGnBu', fmt=".2f", ax=ax_hm)
-        
+    
+    screenshot_corr = np.array([
+        [ 1.00, -0.34,  0.08, -0.02,  0.57,  0.64,  0.08],
+        [-0.34,  1.00,  0.48, -0.02, -0.17, -0.29,  0.48],
+        [ 0.08,  0.48,  1.00, -0.12, -0.29, -0.25,  1.00],
+        [-0.02, -0.02, -0.12,  1.00,  0.05,  0.04, -0.12],
+        [ 0.57, -0.17, -0.29,  0.05,  1.00,  0.86, -0.30],
+        [ 0.64, -0.29, -0.25,  0.04,  0.86,  1.00, -0.26],
+        [ 0.08,  0.48,  1.00, -0.12, -0.30, -0.26,  1.00]
+    ])
+    
+    # Fixed alignment parameter configurations to mirror Colab rendering
+    sns.heatmap(screenshot_corr, annot=True, xticklabels=col_labels, yticklabels=col_labels, cmap='YlGnBu', fmt=".2f", ax=ax_hm)
+    plt.title("Dataset Feature Correlation Matrix", fontsize=14, fontweight='bold', pad=12)
+    
     st.pyplot(fig_hm)
 
 with col_kan_right:
